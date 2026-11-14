@@ -498,7 +498,7 @@ function heroHTML(m) {
       <div class="herotop">
         ${isLive
           ? `<span class="hlive"><i></i>LIVE ${esc(m.clock)}</span>`
-          : `<span class="hkick">${esc(m.kick)}${m.day ? ' \u00b7 ' + esc(m.day) : ''}</span>`}
+          : `<span class="hkick"${tintAttr(m.kick)}><i>${esc(m.kick)}</i>${m.day ? ' \u00b7 ' + esc(m.day) : ''}</span>`}
         <span class="hmeta">${esc(comp)} \u00b7 ${m.marketsCount} markets</span>
       </div>
       <div class="heromid">
@@ -652,6 +652,33 @@ const TL_TODAY = ['Sun, Oct 18', 'Tonight'];
 
 function tlMin(s){ const p = String(s || '0:00').split(':'); return (+p[0]) * 60 + (+p[1] || 0); }
 
+/* The hour, as a colour. ------------------------------------------------
+   A board arranged by time should be able to say the hour at a glance,
+   not only print it. Kick-off times therefore run a dusk ramp: amber at
+   noon, red at sunset, plum through the evening, indigo by midnight, so
+   the column reads as a day passing rather than as eight unrelated
+   numbers. The stops are hue-signed and monotonic — interpolating from
+   2 degrees to 330 the naive way passes through green, which is a lovely
+   colour and the wrong one for a sunset. Lightness is held low
+   throughout so the pale end still clears AA on paper; the card is white
+   but the page behind the axis is not. Times before noon are the small
+   hours, not the early ones, so they land at the far end. */
+const HOUR_STOPS = [[0,38,86,28],[0.25,18,84,29],[0.5,0,78,31],[0.75,-28,52,32],[1,-112,60,36]];
+function hourRamp(t){
+  let u = (t - TL_FROM) / (TL_TO - TL_FROM);
+  if (t < TL_FROM) u += 2;                       // 01:20 is late, not early
+  u = Math.max(0, Math.min(1, u));
+  let i = 0; while (i < HOUR_STOPS.length - 2 && u > HOUR_STOPS[i + 1][0]) i++;
+  const a = HOUR_STOPS[i], b = HOUR_STOPS[i + 1];
+  const k = (u - a[0]) / (b[0] - a[0]);
+  const lerp = (x, y) => x + (y - x) * k;
+  return 'hsl(' + (((lerp(a[1], b[1]) % 360) + 360) % 360) + ' ' +
+                  lerp(a[2], b[2]).toFixed(0) + '% ' + lerp(a[3], b[3]).toFixed(1) + '%)';
+}
+/* live fixtures are not an hour, they are now — they keep the LIVE red */
+function kickTint(kick){ const t = tlMin(kick); return isFinite(t) ? hourRamp(t) : null; }
+function tintAttr(kick){ const c = kickTint(kick); return c ? ' style="--tc:' + c + '"' : ''; }
+
 function timelineHTML(){
   const span = TL_TO - TL_FROM;
   const pc   = v => Math.max(0, Math.min(100, ((v - TL_FROM) / span) * 100));
@@ -681,15 +708,16 @@ function timelineHTML(){
   for (let t = TL_FROM; t <= TL_TO; t += 120) {
     const hh = String(t / 60).padStart(2, '0') + ':00';
     grid.push('<i class="tltick" style="left:' + pc(t) + '%"></i>');
-    axis.push('<i class="tlax" style="left:' + pc(t) + '%">' + hh + '</i>');
+    axis.push('<i class="tlax" style="left:' + pc(t) + '%;--tc:' + hourRamp(t) + '">' + hh + '</i>');
   }
 
   const blocks = today.map(m => {
     const h = HB.teams[m.home], a = HB.teams[m.away];
     const s = tlMin(m.kick);
     const w = Math.max(6, pc(s + W) - pc(s));
+    const kt = kickTint(m.kick);
     return '<button class="tlblock" data-open-match="' + m.id + '"' +
-      ' style="left:' + pc(s) + '%;width:' + w + '%;top:' + (laneOf[m.id] * 34) + 'px">' +
+      ' style="left:' + pc(s) + '%;width:' + w + '%;top:' + (laneOf[m.id] * 34) + 'px' + (kt ? ';--tc:' + kt : '') + '">' +
       '<span class="tlbdot" style="background:' + h.col + '"></span>' +
       '<span class="tlbt">' + esc(h.abbr) + ' <i>v</i> ' + esc(a.abbr) + '</span>' +
       '<span class="tlbm">' + esc(m.kick) + '</span></button>';
@@ -733,7 +761,7 @@ function rowHTML(m) {
        </div>`;
   return `
   <div class="mrow ${m.state === 'live' ? 'live' : 'pre'}">
-    <div class="when">${when}</div>
+    <div class="when"${tintAttr(m.kick)}>${when}</div>
     <div class="who">
       <div class="t">${crest(m.home, 17)}<span class="n">${esc(h.name)}</span>${isLive ? `<span class="s">${m.hs}</span>` : ''}</div>
       <div class="t">${crest(m.away, 17)}<span class="n">${esc(a.name)}</span>${isLive ? `<span class="s">${m.as}</span>` : ''}</div>
@@ -773,7 +801,7 @@ function hlcardHTML(m) {
       <span class="hlcico">${sportIcon(comp.sport || 'soccer')}</span>
       ${isLive
         ? `<span class="hlive"><i></i>LIVE ${esc(m.clock)}</span>`
-        : `<span class="hkick">${esc(m.kick)}${m.day ? ' · ' + esc(m.day) : ''}</span>`}
+        : `<span class="hkick"${tintAttr(m.kick)}><i>${esc(m.kick)}</i>${m.day ? ' · ' + esc(m.day) : ''}</span>`}
       <span class="hlccomp">${esc(comp.short || comp.name || '')}</span>
     </div>
     <div class="hlcbody">

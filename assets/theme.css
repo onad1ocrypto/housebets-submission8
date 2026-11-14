@@ -673,3 +673,19 @@ body::before{
   .tllive{ animation:none; }
   .tllive span i{ animation:none; }
 }
+
+/* ============================================================================
+   THE HOUR, AS A COLOUR
+   app.js sets --tc on anything that prints a kick-off time: the column on
+   every match row, the time on each timeline block, and the axis labels
+   themselves. Tinting the axis is what spares the ramp a legend — the
+   scale it is read against is the scale it is printed on. The date under
+   the time stays neutral grey: it is the same afternoon whatever the hour.
+   .mrow.pre .when is restated because app.css rules it at a higher
+   specificity than a bare .mrow .when could reach.
+   ========================================================================= */
+.mrow .when,
+.mrow.pre .when{ color:var(--tc, var(--ink-3)); font-weight:600; }
+.tlbm{ color:var(--tc, var(--ink-3)); }
+.tlax{ color:var(--tc, var(--ink-4)); font-weight:600; }
+.hkick i{ font-style:normal; color:var(--tc, var(--ink)); }
