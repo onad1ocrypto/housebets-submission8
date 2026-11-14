@@ -689,3 +689,20 @@ body::before{
 .tlbm{ color:var(--tc, var(--ink-3)); }
 .tlax{ color:var(--tc, var(--ink-4)); font-weight:600; }
 .hkick i{ font-style:normal; color:var(--tc, var(--ink)); }
+
+/* ============================================================================
+   THE BLOCKS CARRY THE HOUR TOO
+   The time printed on a block was already tinted; the block itself was
+   still a plain white chip, so the timeline read as grey tiles with
+   coloured numbers on them. Each block now takes its own kick-off hour
+   as a wash behind the teams and an edge around them, which turns the
+   row of lanes into the ramp itself — amber at the left, indigo at the
+   right — and makes "how late is this one" answerable before the label
+   is read. Hover still goes cyan: that is the clickable signal and it
+   should not compete with the time of day.
+   ========================================================================= */
+.tlblock{
+  background:var(--tcw, var(--card));
+  border-color:var(--tcb, var(--hair-2));
+}
+.tlblock:hover{ border-color:var(--aqua); background:var(--aqua-deep); }

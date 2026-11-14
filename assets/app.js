@@ -664,7 +664,7 @@ function tlMin(s){ const p = String(s || '0:00').split(':'); return (+p[0]) * 60
    but the page behind the axis is not. Times before noon are the small
    hours, not the early ones, so they land at the far end. */
 const HOUR_STOPS = [[0,38,86,28],[0.25,18,84,29],[0.5,0,78,31],[0.75,-28,52,32],[1,-112,60,36]];
-function hourRamp(t){
+function hourRamp(t, alpha){
   let u = (t - TL_FROM) / (TL_TO - TL_FROM);
   if (t < TL_FROM) u += 2;                       // 01:20 is late, not early
   u = Math.max(0, Math.min(1, u));
@@ -673,10 +673,11 @@ function hourRamp(t){
   const k = (u - a[0]) / (b[0] - a[0]);
   const lerp = (x, y) => x + (y - x) * k;
   return 'hsl(' + (((lerp(a[1], b[1]) % 360) + 360) % 360) + ' ' +
-                  lerp(a[2], b[2]).toFixed(0) + '% ' + lerp(a[3], b[3]).toFixed(1) + '%)';
+                  lerp(a[2], b[2]).toFixed(0) + '% ' + lerp(a[3], b[3]).toFixed(1) + '%' +
+                  (alpha != null ? ' / ' + alpha : '') + ')';
 }
 /* live fixtures are not an hour, they are now — they keep the LIVE red */
-function kickTint(kick){ const t = tlMin(kick); return isFinite(t) ? hourRamp(t) : null; }
+function kickTint(kick, alpha){ const t = tlMin(kick); return isFinite(t) ? hourRamp(t, alpha) : null; }
 function tintAttr(kick){ const c = kickTint(kick); return c ? ' style="--tc:' + c + '"' : ''; }
 
 function timelineHTML(){
@@ -715,9 +716,13 @@ function timelineHTML(){
     const h = HB.teams[m.home], a = HB.teams[m.away];
     const s = tlMin(m.kick);
     const w = Math.max(6, pc(s + W) - pc(s));
-    const kt = kickTint(m.kick);
+    /* the block is the match, so it carries the hour the match kicks off:
+       --tc for the time, --tcw as a wash, --tcb as its edge */
+    const kt  = kickTint(m.kick);
+    const kts = kt ? ';--tc:' + kt + ';--tcw:' + kickTint(m.kick, .20) +
+                     ';--tcb:' + kickTint(m.kick, .58) : '';
     return '<button class="tlblock" data-open-match="' + m.id + '"' +
-      ' style="left:' + pc(s) + '%;width:' + w + '%;top:' + (laneOf[m.id] * 34) + 'px' + (kt ? ';--tc:' + kt : '') + '">' +
+      ' style="left:' + pc(s) + '%;width:' + w + '%;top:' + (laneOf[m.id] * 34) + 'px' + kts + '">' +
       '<span class="tlbdot" style="background:' + h.col + '"></span>' +
       '<span class="tlbt">' + esc(h.abbr) + ' <i>v</i> ' + esc(a.abbr) + '</span>' +
       '<span class="tlbm">' + esc(m.kick) + '</span></button>';
