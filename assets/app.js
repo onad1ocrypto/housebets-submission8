@@ -1449,6 +1449,14 @@ function renderSheet() {
   const h3 = $('#sheet .sh h3');
   if (h3) h3.textContent = S.myBetsTab === 'slip' ? 'Bet slip'
                         : S.myBetsTab === 'history' ? 'History' : 'My bets';
+  /* My bets and History are rooms off the slip, so they get a way back
+     out of them. The tab row is navigation; an arrow is an exit, and
+     people look for the arrow first. */
+  const bk = $('#sheetBack');
+  if (bk) {
+    bk.hidden = (S.myBetsTab === 'slip');
+    bk.onclick = () => { S.myBetsTab = 'slip'; renderSlip(); bindPage(); };
+  }
   bindSlip(sb);
   /* bindSlip does not touch the tabs — that binding lives in bindPage(),
      which never runs for the sheet. Without this the tabs render and do
@@ -2202,7 +2210,7 @@ function boot() {
 
     <div class="sheet" id="sheet">
       <div class="grab"><i></i></div>
-      <div class="sh"><h3>Bet slip</h3><button class="x" id="sheetClose">${I.x}</button></div>
+      <div class="sh"><button class="sback" id="sheetBack" aria-label="Back to bet slip" hidden>${I.back}</button><h3>Bet slip</h3><button class="x" id="sheetClose">${I.x}</button></div>
       <div class="sheetpanel"><div id="sheetBody"></div></div>
       <div class="sheetfoot" id="sheetFoot"></div>
     </div>
