@@ -716,11 +716,14 @@ function timelineHTML(){
     const h = HB.teams[m.home], a = HB.teams[m.away];
     const s = tlMin(m.kick);
     const w = Math.max(6, pc(s + W) - pc(s));
-    /* the block is the match, so it carries the hour the match kicks off:
-       --tc for the time, --tcw as a wash, --tcb as its edge */
+    /* The block is the match, and the match column is Housebets' own navy
+       #0B1920 — the one blue the brief already hands us, so nothing here
+       is invented. It arrives as a wash and an edge while --tc stays the
+       kick-off hour, because the printed time keeps its ramp. The block
+       has to stay light for that: the ramp runs dark, and a navy fill
+       would put a dark hour on a dark chip. */
     const kt  = kickTint(m.kick);
-    const kts = kt ? ';--tc:' + kt + ';--tcw:' + kickTint(m.kick, .20) +
-                     ';--tcb:' + kickTint(m.kick, .58) : '';
+    const kts = ';--tcw:rgba(11,25,32,.12);--tcb:rgba(11,25,32,.70)' + (kt ? ';--tc:' + kt : '');
     return '<button class="tlblock" data-open-match="' + m.id + '"' +
       ' style="left:' + pc(s) + '%;width:' + w + '%;top:' + (laneOf[m.id] * 34) + 'px' + kts + '">' +
       '<span class="tlbdot" style="background:' + h.col + '"></span>' +
