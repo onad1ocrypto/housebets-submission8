@@ -701,8 +701,16 @@ body::before{
    goes cyan, which is the clickable signal, not a colour of the day.
    ========================================================================= */
 .tlblock{
-  background:var(--tcw, var(--card));
-  border-color:var(--tcb, var(--hair-2));
+  background:#0B1920;
+  border-color:#0B1920;
 }
+/* the hour rides on the navy, so it has to be the lifted ramp */
+.tlblock .tlbm{ color:var(--tc, #DCE6EA); }
+.tlblock .tlbt{ color:#F2F5F7; }
+.tlblock .tlbt i{ color:rgba(242,245,247,.60); }
+/* hover flips the whole chip to the brand cyan, so the text flips dark
+   with it — a light hour on a pale cyan ground would vanish */
 .tlblock:hover{ border-color:var(--aqua); background:var(--aqua-deep); }
-.tlbt, .tlbt i{ color:#0B1920; }
+.tlblock:hover .tlbt,
+.tlblock:hover .tlbt i,
+.tlblock:hover .tlbm{ color:var(--aqua-ink); }

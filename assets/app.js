@@ -664,12 +664,20 @@ function tlMin(s){ const p = String(s || '0:00').split(':'); return (+p[0]) * 60
    but the page behind the axis is not. Times before noon are the small
    hours, not the early ones, so they land at the far end. */
 const HOUR_STOPS = [[0,38,86,28],[0.25,18,84,29],[0.5,0,78,31],[0.75,-28,52,32],[1,-112,60,36]];
-function hourRamp(t, alpha){
+/* The same ramp for a dark ground. Navy at 12% over white is not navy, it
+   is a pale grey — the hue only survives at full strength. So the block
+   is filled with the navy itself, and the hour is carried by a lifted
+   version of the ramp: identical hues, lightness raised until each one
+   clears AA on #0B1920. The time of day is still legible as a colour;
+   it simply reads on a dark chip now. */
+const HOUR_STOPS_DARK = [[0,38,74,70],[0.25,18,72,71],[0.5,0,68,72],[0.75,-28,54,74],[1,-112,60,77]];
+function hourRamp(t, alpha, onDark){
+  const STOPS = onDark ? HOUR_STOPS_DARK : HOUR_STOPS;
   let u = (t - TL_FROM) / (TL_TO - TL_FROM);
   if (t < TL_FROM) u += 2;                       // 01:20 is late, not early
   u = Math.max(0, Math.min(1, u));
-  let i = 0; while (i < HOUR_STOPS.length - 2 && u > HOUR_STOPS[i + 1][0]) i++;
-  const a = HOUR_STOPS[i], b = HOUR_STOPS[i + 1];
+  let i = 0; while (i < STOPS.length - 2 && u > STOPS[i + 1][0]) i++;
+  const a = STOPS[i], b = STOPS[i + 1];
   const k = (u - a[0]) / (b[0] - a[0]);
   const lerp = (x, y) => x + (y - x) * k;
   return 'hsl(' + (((lerp(a[1], b[1]) % 360) + 360) % 360) + ' ' +
@@ -677,7 +685,7 @@ function hourRamp(t, alpha){
                   (alpha != null ? ' / ' + alpha : '') + ')';
 }
 /* live fixtures are not an hour, they are now — they keep the LIVE red */
-function kickTint(kick, alpha){ const t = tlMin(kick); return isFinite(t) ? hourRamp(t, alpha) : null; }
+function kickTint(kick, alpha, onDark){ const t = tlMin(kick); return isFinite(t) ? hourRamp(t, alpha, onDark) : null; }
 function tintAttr(kick){ const c = kickTint(kick); return c ? ' style="--tc:' + c + '"' : ''; }
 
 function timelineHTML(){
@@ -723,7 +731,7 @@ function timelineHTML(){
        has to stay light for that: the ramp runs dark, and a navy fill
        would put a dark hour on a dark chip. */
     const kt  = kickTint(m.kick);
-    const kts = ';--tcw:rgba(11,25,32,.12);--tcb:rgba(11,25,32,.70)' + (kt ? ';--tc:' + kt : '');
+    const kts = ';--tc:' + (kt ? kickTint(m.kick, null, true) : '#DCE6EA');
     return '<button class="tlblock" data-open-match="' + m.id + '"' +
       ' style="left:' + pc(s) + '%;width:' + w + '%;top:' + (laneOf[m.id] * 34) + 'px' + kts + '">' +
       '<span class="tlbdot" style="background:' + h.col + '"></span>' +
