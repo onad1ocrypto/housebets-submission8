@@ -639,3 +639,37 @@ body::before{
   font-variant-numeric:tabular-nums; font-style:normal; }
 @media (max-width:700px){ .tl{ margin:12px 10px 4px; } }
 .tlax:last-child{ transform:translateX(-100%); }
+
+/* ============================================================================
+   IN PLAY — the only thing on the page that is allowed to blink
+   The band behind the playhead is where the live matches are, so it
+   takes the same red the LIVE badge uses and breathes with it. It is
+   the one animated thing on the board, which is what makes it read as
+   "happening now" rather than as decoration.
+   ========================================================================= */
+.tllive{ background:rgba(200,16,46,.07) !important;
+  border-right:1px dashed rgba(200,16,46,.45) !important;
+  animation:tlBand 2.8s ease-in-out infinite; }
+@keyframes tlBand{
+  0%,100%{ background:rgba(200,16,46,.05); }
+  50%    { background:rgba(200,16,46,.17); }
+}
+.tllive span{ color:#B00C27 !important; display:inline-flex; align-items:center; gap:4px; }
+.tllive span i{ width:5px; height:5px; border-radius:50%; background:var(--live);
+  flex:0 0 5px; animation:tlDot 1.5s ease-in-out infinite; }
+@keyframes tlDot{ 0%,100%{ opacity:1; } 50%{ opacity:.20; } }
+
+/* goalscorers on a match card — the same incident data the scoreboard
+   reads, kept to one line of names so the card does not grow a widget */
+.cardgoals{ display:flex; flex-wrap:wrap; gap:4px 10px; padding:5px 12px 0; }
+.cg{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; color:var(--ink-3); }
+.cg b{ font-weight:650; color:var(--ink-2); }
+.cg-ball{ width:8px; height:8px; flex:0 0 8px; border-radius:50%;
+  background:var(--card); border:1.5px solid var(--ink-4); position:relative; }
+.cg-ball::after{ content:""; position:absolute; inset:1px; border-radius:50%;
+  background:var(--ink-4); opacity:.55; }
+
+@media (prefers-reduced-motion: reduce){
+  .tllive{ animation:none; }
+  .tllive span i{ animation:none; }
+}

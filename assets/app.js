@@ -708,7 +708,7 @@ function timelineHTML(){
     </div>
     <div class="tlscroll">
       <div class="tlgrid" style="height:${rows * 34 + 8}px">
-        <div class="tllive" style="width:${nowPc}%"><span>in play</span></div>
+        <div class="tllive" style="width:${nowPc}%"><span><i></i>in play</span></div>
         ${grid.join('')}
         <div class="tlblocks">${blocks}</div>
         <div class="tlnow" style="left:${nowPc}%"><i></i><b>${hhmm}</b></div>
@@ -912,6 +912,7 @@ function mcardHTML(m) {
       <div class="trow">${crest(m.home, 20)}<span class="tname">${esc(h.name)}</span>${isLive ? `<span class="tscore">${m.hs}</span>` : ''}</div>
       <div class="trow">${crest(m.away, 20)}<span class="tname">${esc(a.name)}</span>${isLive ? `<span class="tscore">${m.as}</span>` : ''}</div>
     </div>
+    ${cardGoals(m)}
     ${m.susp
       ? `<div class="suspended">${I.lock} Suspended</div>`
       : `<div class="oddsrow col3">
@@ -1039,6 +1040,21 @@ function sbGoals(m, side) {
   return `<div class="sb-goals">${list.map(g =>
     `<span class="sg"><i class="sg-ball"></i>${esc(sq[g.p - 1])} ${g.min}'</span>`).join('')}</div>`;
 }
+/* The scoreboard already named its scorers; the cards did not, so a
+   2-1 on the home page told you nothing about who scored. Same event
+   data, so the card and the scoreboard can never disagree. */
+function cardGoals(m) {
+  const ev = HB.events[m.id];
+  if (!ev || m.state !== 'live' || !ev.goals.length) return '';
+  const sqH = HB.squad(m.home), sqA = HB.squad(m.away);
+  const rows = ev.goals.slice().sort((x, y) => x.min - y.min).map(g => {
+    const home = g.s === 'h';
+    const name = (home ? sqH : sqA)[g.p - 1] || '';
+    return `<span class="cg"><i class="cg-ball"></i><b>${esc(name)}</b>${g.min}'</span>`;
+  }).join('');
+  return `<div class="cardgoals">${rows}</div>`;
+}
+
 function sbCards(m) {
   const ev = HB.events[m.id];
   if (!ev || m.state !== 'live') return '';
@@ -1336,10 +1352,7 @@ function renderSlip() {
     bi.innerHTML = betsBodyHTML();
     bindSlip(bi);
   }
-  if (S.sheetOpen) {
-    const sb = $('#sheetBody');
-    if (sb) { sb.innerHTML = betsBodyHTML(); bindSlip(sb); }
-  }
+  if (S.sheetOpen) renderSheet();
   renderSlipBar();
 }
 
@@ -1366,12 +1379,39 @@ function renderSlipBar() {
   const sh = $('#sheet'); if (sh && !S.slip.length && !S.sheetOpen) sh.classList.remove('open');
 }
 
+/* The sheet is the only way into the slip on a phone, so it needs the
+   same tab row the desktop panel and the bets page both have. Without
+   it the sheet opens into the slip and there is no way to reach My
+   bets or History short of closing the whole thing. */
+function sheetTabsHTML() {
+  const t = S.myBetsTab;
+  return `<div class="sliptabs">
+    <button class="sliptab ${t === 'slip' ? 'on' : ''}" data-mbt="slip">Bet slip${S.slip.length ? `<span class="n">${S.slip.length}</span>` : ''}</button>
+    <button class="sliptab ${t === 'my' ? 'on' : ''}" data-mbt="my">My bets</button>
+    <button class="sliptab ${t === 'history' ? 'on' : ''}" data-mbt="history">History</button>
+  </div>`;
+}
+
 function openSheet() {
   S.sheetOpen = true;
   const sh = $('#sheet');
   sh.classList.add('open');
-  $('#sheetBody').innerHTML = betsBodyHTML();
-  bindSlip($('#sheetBody'));
+  renderSheet();
+}
+
+function renderSheet() {
+  const sb = $('#sheetBody'); if (!sb) return;
+  sb.innerHTML = sheetTabsHTML() + betsBodyHTML();
+  const h3 = $('#sheet .sh h3');
+  if (h3) h3.textContent = S.myBetsTab === 'slip' ? 'Bet slip'
+                        : S.myBetsTab === 'history' ? 'History' : 'My bets';
+  bindSlip(sb);
+  /* bindSlip does not touch the tabs — that binding lives in bindPage(),
+     which never runs for the sheet. Without this the tabs render and do
+     nothing, which is exactly how the sheet got stuck on the slip. */
+  $$('#sheetBody [data-mbt]').forEach(b => b.onclick = () => {
+    S.myBetsTab = b.dataset.mbt; renderSlip(); bindPage();
+  });
 }
 
 
